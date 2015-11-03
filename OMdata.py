@@ -30,7 +30,9 @@ def getSurveyList():
 		print ('Error getting the survey list from the opinion meter api')
 
 
-
+'''
+	add docs in a few
+'''
 def getSurveyAllData(startDate, endDate):
 	apiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/GetMultipleSurveyDetailsByDate/'
 	headers = {'Content-Type': 'application/json'}
