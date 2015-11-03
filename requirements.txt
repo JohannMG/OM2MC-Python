@@ -1,0 +1,4 @@
+docopt==0.4.0
+mailchimp==2.0.9
+requests==2.8.1
+wheel==0.24.0
