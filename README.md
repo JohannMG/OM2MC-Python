@@ -5,8 +5,8 @@ Uses Opinion Meter REST API to collect survey results, looks for emails, and add
 
 
 Uses: 
-[Requests] http://docs.python-requests.org/
-[Mailchimp Python Lib] https://bitbucket.org/mailchimp/
+[Requests]: http://docs.python-requests.org/
+[Mailchimp Python Lib]: https://bitbucket.org/mailchimp/
 
 
 *Contacts*
