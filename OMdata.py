@@ -110,21 +110,44 @@ def subcribeNewUsers(batchList):
 """
     Provide the returned survery struct from opinionmeter, will return the QuetionID where email is likely found
     {ErrorMessage: ..., Name:"", QUES... }
-    return: NUMBER
+    return: NUMBER(None if not found)
 """
 
 def getEmailQuestionID(survey):
     questions = survey["LNGS"][0]["QUES"]
 
     for question in questions: 
-        if question['type'] != 7: 
+        if question['Type'] != 7: 
             continue
         if question['IsHiddenQues'] == True: 
             continue
-        if ('EMAIL' in question['text'].upper() or 'E-MAIL' in question['text'].upper()): 
+        if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
             return question['Id']
 
     print None
+
+"""
+    Provide the returned survery struct from opinionmeter, 
+    will return the first QuetionID where ANY of the keys are found in the question text
+    {ErrorMessage: ..., Name:"", QUES... }
+    return: NUMBER (None if not found)
+"""
+
+def getQuestionIdFromStrings(survey, *strings):
+    questions = survey["LNGS"][0]["QUES"]
+
+    for question in questions:
+        if question['Type'] != 7:
+            continue 
+
+        for key in strings:
+            if key in question['Text']:
+                return question['Id']
+
+    return None
+
+
+
 
 if __name__ == "__main__":
     print 'hi there'
