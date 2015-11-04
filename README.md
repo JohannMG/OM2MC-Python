@@ -5,14 +5,14 @@ Uses Opinion Meter REST API to collect survey results, looks for emails, and add
 
 
 Uses: 
-+[Requests][]
-+[Mailchimp Python Lib][]
++ [Requests][]
++ [Mailchimp Python Lib][]
 
 
 
 *Contacts*
 + Lead: [JohannMG][] 
-+ Developed At: [Ripley's BION][]
++ Developed At: [Ripley's Entertainment][]
 
 
 #Notes: 
@@ -22,12 +22,12 @@ Uses:
 [Requests]: http://docs.python-requests.org/
 [Mailchimp Python Lib]: https://bitbucket.org/mailchimp/
 [JohannMG]: http://www.twitter.com/johann_mg
-[Ripley's BION]: http://www.ripleys.com
+[Ripley's Entertainment]: http://www.ripleys.com
 
 The MIT License
 ===============
 
-Copyright (c) 2009-2014 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+Copyright (c)  johannmg + ripent
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -24,8 +24,10 @@ def getSurveyList():
             return res['ListSurvey']
         else: 
             print 'Error returned ' + res['ErrorMessage']
+            return None
     except:
         print ('Error getting the survey list from the opinion meter api')
+        return None
 
 
 '''
@@ -34,6 +36,8 @@ def getSurveyList():
     endDate : Python datetime object
 
     uses getSurveyList() and calls ALL active locations > This is a SLOW method. 10-120s depending on range and size
+
+    returns: JSON response
 '''
 def getSurveyAllData(startDate, endDate):
     apiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/GetMultipleSurveyDetailsByDate/'
@@ -103,29 +107,27 @@ def subcribeNewUsers(batchList):
         print e
         return False
 
+"""
+    Provide the returned survery struct from opinionmeter, will return the QuetionID where email is likely found
+    {ErrorMessage: ..., Name:"", QUES... }
+    return: NUMBER
+"""
 
+def getEmailQuestionID(survey):
+    questions = survey["LNGS"][0]["QUES"]
+
+    for question in questions: 
+        if question['type'] != 7: 
+            continue
+        if question['IsHiddenQues'] == True: 
+            continue
+        if ('EMAIL' in question['text'].upper() or 'E-MAIL' in question['text'].upper()): 
+            return question['Id']
+
+    print None
 
 if __name__ == "__main__":
-    # print getSurveyAllData( datetime.now() - timedelta (days=2), datetime.now()  )
-    batch = [
-        {
-            'email': {'email': 'hello@johannmg.com'},
-            'email_type': 'html', 
-            'merge_vars': {}
-        }, 
-        {
-            'email': {'email': 'hubbard@ripleys.com'},
-            'email_type': 'html', 
-            'merge_vars': {}
-        }, 
-    ]
-    subcribeNewUsers(batch)
-
-
-
-
-
-
+    print 'hi there'
 
 
 
