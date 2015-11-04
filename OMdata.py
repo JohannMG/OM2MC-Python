@@ -146,7 +146,12 @@ def getQuestionIdFromStrings(survey, *strings):
 
     return None
 
+"""
+    send the ["SurveyResponses"] array from each location 
+    returns: array
+"""
 
+# def extractFieldsFromResponses()
 
 
 if __name__ == "__main__":

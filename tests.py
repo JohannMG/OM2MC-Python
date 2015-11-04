@@ -1,4 +1,5 @@
 import OMdata
+import dex
 
 
 def TESTgetSurveyList(): 
@@ -47,9 +48,18 @@ def TESTgetQuestionIdFromStrings():
     else:
         print 'getQuestionIdFromStrings() [FAILS]'
 
+def TESTgetLocationName(): 
+    result = dex.getLocationName(48688)
 
+    if (result == 'Baltimore'):
+        print 'dex.getLocationName() [PASSES]'
+    else:
+        print 'dex.getLocationName() [FAILS]'
 
 if __name__ == "__main__":    
+    #OMdata
     TESTgetEmailQuestionID();
     TESTgetSurveyList();
     TESTgetQuestionIdFromStrings();
+    #dex
+    TESTgetLocationName()
