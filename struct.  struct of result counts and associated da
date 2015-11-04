@@ -1,0 +1,23 @@
+struct.  struct of result counts and associated data::
+   add_count (int): Number of email addresses that were successfully added
+   adds (array): array of structs for each add::
+       adds.email (string): the email address added
+       adds.euid (string): the email unique id
+       adds.leid (string): the list member's truly unique id
+
+   update_count (int): Number of email addresses that were successfully updated
+   updates (array): array of structs for each update::
+       updates.email (string): the email address added
+       updates.euid (string): the email unique id
+       updates.leid (string): the list member's truly unique id
+
+   error_count (int): Number of email addresses that failed during addition/updating
+   errors (array): array of error structs including:::
+       errors.email (string): whatever was passed in the batch record's email parameter::
+           errors.email.email (string): the email address added
+           errors.email.euid (string): the email unique id2
+           errors.email.leid (string): the list member's truly unique id
+
+       errors.code (int): the error code
+       errors.error (string): the full error message
+       errors.row (struct): the row from the batch that caused the error
