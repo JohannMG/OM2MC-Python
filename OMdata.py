@@ -4,6 +4,7 @@ import json
 from requests.auth import HTTPBasicAuth
 import datetime
 from datetime import *
+import base64
 
 
 baseApiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/'
@@ -35,9 +36,12 @@ def getSurveyList():
     startDate : Python datetime object
     endDate : Python datetime object
 
+    NOTE:  it's not in the Opionion Meter documentation, but endDate is NON exclusive
+            in fancier notation: [startDate, endDate)
+
     uses getSurveyList() and calls ALL active locations > This is a SLOW method. 10-120s depending on range and size
 
-    returns: JSON response
+    returns: response object  [http://docs.python-requests.org/en/latest/]
 '''
 def getSurveyAllData(startDate, endDate):
     apiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/GetMultipleSurveyDetailsByDate/'
@@ -61,7 +65,7 @@ def getSurveyAllData(startDate, endDate):
         print 'Error with Getting all Survey Data'
         raise e
 
-    return res.json(); 
+    return res
 
 
 '''
@@ -108,7 +112,7 @@ def subcribeNewUsers(batchList):
         return False
 
 """
-    Provide the returned survery struct from opinionmeter, will return the QuetionID where email is likely found
+    Provide the returned survey struct from opinionmeter, will return the QuetionID where email is likely found
     {ErrorMessage: ..., Name:"", QUES... }
     return: NUMBER(None if not found)
 """
@@ -127,7 +131,24 @@ def getEmailQuestionID(survey):
     print None
 
 """
-    Provide the returned survery struct from opinionmeter, 
+    Provide the returned survey struct from opinionmeter, will return the QuetionID where email is likely found
+    {ErrorMessage: ..., Name:"", QUES... }
+    return: NUMBER (None if not found) representing the index of the question
+"""
+
+def getEmailQuestionIndex(survey):
+    questions = survey["LNGS"][0]["QUES"]
+    for index, question in enumerate(questions):
+        if question['Type'] != 7: 
+            continue
+        if question['IsHiddenQues'] == True: 
+            continue
+        if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
+            return index
+    return
+
+"""
+    Provide the returned survey struct from opinionmeter, 
     will return the first QuetionID where ANY of the keys are found in the question text
     {ErrorMessage: ..., Name:"", QUES... }
     return: NUMBER (None if not found)
@@ -147,11 +168,80 @@ def getQuestionIdFromStrings(survey, *strings):
     return None
 
 """
-    send the ["SurveyResponses"] array from each location 
-    returns: array
+    arg1: provide the returned survey struct from opinionmeter, 
+    will return the first index of the question where ANY of the keys are found in the question text
+    {ErrorMessage: ..., Name:"", QUES... }
+    return: NUMBER (None if not found)
 """
 
-# def extractFieldsFromResponses()
+def getQuestionIndexFromStrings(survey, *strings):
+    questions = survey["LNGS"][0]["QUES"]
+
+    for index, question in enumerate(questions):
+        for key in strings: 
+            if key in question['Text']: 
+                return index
+    return None
+
+"""
+    arg 1: entire array from each location response in the OM API 
+        e.g. {ErrorMessage: '', IdSpecified: , Name, Id, SurveyResponses, ...}
+    arg 2: Question ID that contains email
+    arg 3+: send extraction vars as a dictionary with NAME and the QuestionID to fetch it from
+        {7 = 'zip'}
+
+    returns: array with emails + extracted merge tags
+    [{
+        'email': 'emailema@il.com'
+        'merge_vars': { 'ZIP': 62378, LOCATION: 'B'}   #from the passed in args
+        'email_type': 'html'
+    ]
+"""
+
+def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ): 
+    indicesToCheck = mergeDict.keys()
+    capturedData = []
+    locationName = dex.getLocationName(survey['Id']);
+
+    surveyResponses = survey['SurveyResponses'] #should be an array
+    
+
+    for response in surveyResponses: 
+        #new user obj w/ embedded structs
+        userObj = {}
+        userObj['email'] = {}
+        userObj['merge_vars'] = {}
+
+        extractedEmail = response['Responses'][emailQuestionIndex]['Res']
+
+        if ( isinstance(extractedEmail, str) and len(extractedEmail) > 2): 
+            extractedEmail = base64.decodestring(extractedEmail)
+            userObj['email']['email'] = extractedEmail
+        else: 
+            #no email found, continue to next :(
+            continue
+
+        #add location tag set in dex.py 
+        userObj['merge_vars'][dex.Mailchimp_Location_Tag] = locationName
+        userObj['email_type'] = 'html'
+
+        #get merge tags
+        for indexOfTag, tag in enumerate (indicesToCheck):
+            extracted = response['Responses'][tag]['Res']
+            if (isinstance (extracted, str)): 
+                extracted = base64.decodestring(extracted)
+            userObj['merge_vars'][mergeDict[tag]] = extracted
+
+        #if all went well, add to the returned oject array
+        capturedData.append(userObj)
+    #END FOR LOOP
+
+    return capturedData
+
+        
+        
+
+    
 
 
 if __name__ == "__main__":
