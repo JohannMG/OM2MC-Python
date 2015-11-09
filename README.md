@@ -18,6 +18,10 @@ Uses:
 #Notes: 
 
 
+#TODO: 
++ Add logging to file for emails
+
+
 
 [Requests]: http://docs.python-requests.org/
 [Mailchimp Python Lib]: https://bitbucket.org/mailchimp/
