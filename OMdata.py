@@ -5,8 +5,10 @@ from requests.auth import HTTPBasicAuth
 import datetime
 from datetime import *
 import base64
+import re
+import logging
 
-
+logging.basicConfig(filename='ombridge.log',level=logging.INFO)
 baseApiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/'
 authHeader = HTTPBasicAuth(dex.omUser, dex.omPass)
 
@@ -24,10 +26,10 @@ def getSurveyList():
         if res['ErrorMessage'] == None: 
             return res['ListSurvey']
         else: 
-            print 'Error returned ' + res['ErrorMessage']
+            logging.info('Error returned ' + res['ErrorMessage'] ) 
             return None
     except:
-        print ('Error getting the survey list from the opinion meter api')
+        logging.info ('Error getting the survey list from the opinion meter api')
         return None
 
 
@@ -62,7 +64,7 @@ def getSurveyAllData(startDate, endDate):
     try:
         res = requests.get(apiUrl, params=params , auth=authHeader, timeout=240)
     except Exception, e:
-        print 'Error with Getting all Survey Data'
+        logging.info( 'Error with Getting all Survey Data' ) 
         raise e
 
     return res
@@ -96,7 +98,7 @@ def subcribeNewUsers(batchList):
     try: 
         mc = dex.get_mailchimp_api()
         res = mc.lists.batch_subscribe(dex.mailchimpList, batchList, double_optin= True, update_existing=True)
-        print 'Added {0} new email(s), {1} update(s) to Mailchimp. {2} Error(s)'.format(res['add_count'], res['update_count'] ,res['error_count'])
+        logging.info ( 'Added {0} new email(s), {1} update(s) to Mailchimp. {2} Error(s)'.format(res['add_count'], res['update_count'] ,res['error_count']) ) 
 
         for item in res['adds']:
             print 'added: {0}'.format(item['email'])
@@ -107,8 +109,8 @@ def subcribeNewUsers(batchList):
 
         return True
     except Exception, e:
-        print 'Error Batch Adding to Mailchimp'
-        print e
+        logging.info ( 'Error Batch Adding to Mailchimp' ) 
+        logging.info ( e )
         return False
 
 """
@@ -128,7 +130,7 @@ def getEmailQuestionID(survey):
         if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
             return question['Id']
 
-    print None
+    return None
 
 """
     Provide the returned survey struct from opinionmeter, will return the QuetionID where email is likely found
@@ -145,7 +147,7 @@ def getEmailQuestionIndex(survey):
             continue
         if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
             return index
-    return
+    return None
 
 """
     Provide the returned survey struct from opinionmeter, 
@@ -204,8 +206,10 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
     capturedData = []
     locationName = dex.getLocationName(survey['Id']);
 
-    surveyResponses = survey['SurveyResponses'] #should be an array
-    
+    try: 
+        surveyResponses = survey['SurveyResponses'] #should be an array
+    except Exception: 
+        return capturedData
 
     for response in surveyResponses: 
         #new user obj w/ embedded structs
@@ -213,13 +217,21 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
         userObj['email'] = {}
         userObj['merge_vars'] = dex.mailchimp_merge_tags() #incl default merge tags
 
-        extractedEmail = response['Responses'][emailQuestionIndex]['Res']
+        testarr = response['Responses']
+        if not testarr: 
+            continue
 
-        if ( isinstance(extractedEmail, str) and len(extractedEmail) > 2): 
+        extractedEmail = str (response['Responses'][emailQuestionIndex]['Res'])
+
+        if ( len (extractedEmail) > 0 and len(base64.decodestring(extractedEmail)) > 2 ): 
             extractedEmail = base64.decodestring(extractedEmail)
             userObj['email']['email'] = extractedEmail
+
         else: 
             #no email found, continue to next :(
+            continue
+
+        if not re.match(r'[^@]+@[^@]+\.[^@]+', extractedEmail): 
             continue
 
         #add location tag set in dex.py 
@@ -228,16 +240,17 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
 
         #get merge tags
         for indexOfTag, tag in enumerate (indicesToCheck):
-            extracted = response['Responses'][tag]['Res']
-            if (isinstance (extracted, str)): 
+            extracted = str(response['Responses'][tag]['Res'])
+            if (len (extracted) > 0 ): 
                 extracted = base64.decodestring(extracted)
-            userObj['merge_vars'][mergeDict[tag]] = extracted
+                userObj['merge_vars'][mergeDict[tag]] = extracted
 
         #if all went well, add to the returned oject array
         capturedData.append(userObj)
     #END FOR LOOP
 
     return capturedData
+
 
         
         
