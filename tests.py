@@ -83,7 +83,7 @@ def TESTgetQuestionIndexFromStrings():
         ]    
     }
 
-    results = OMdata.getQuestionIndexFromStrings(sur, 'hnksf', 'zip')
+    results = OMdata.getQuestionIndexFromStrings(sur, ['hnksf', 'zip'])
 
     if (results == 1): 
         print 'getQuestionIndexFromStrings() [PASSES]'
@@ -114,7 +114,7 @@ def TESTextractFieldsFromResponses():
     ]
 }
 
-    results = OMdata.extractFieldsFromResponses(surveySample, 0, {2:'zip'})
+    results = OMdata.extractFieldsFromResponses(surveySample, 0, {2:'ZIP'})
 
 
     '''should return:
@@ -140,7 +140,7 @@ def TESTextractFieldsFromResponses():
     ]
     '''
 
-    if ( results[0]['merge_vars']['zip'] == '43287' and 
+    if ( results[0]['merge_vars']['ZIP'] == '43287' and 
             results[1]['email']['email'] == 'this@this.com'):
         print 'OMdata.extractFieldsFromResponses() [PASSES]'
     else: 

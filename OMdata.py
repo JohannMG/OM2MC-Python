@@ -60,7 +60,7 @@ def getSurveyAllData(startDate, endDate):
     apiUrl = apiUrl + '?' + paramsAddToUrl
 
     try:
-        res = requests.get(apiUrl, params=params , auth=authHeader, timeout=60)
+        res = requests.get(apiUrl, params=params , auth=authHeader, timeout=240)
     except Exception, e:
         print 'Error with Getting all Survey Data'
         raise e
@@ -171,15 +171,16 @@ def getQuestionIdFromStrings(survey, *strings):
     arg1: provide the returned survey struct from opinionmeter, 
     will return the first index of the question where ANY of the keys are found in the question text
     {ErrorMessage: ..., Name:"", QUES... }
+    arg2: provide an array with all the strings to identify the field by
     return: NUMBER (None if not found)
 """
 
-def getQuestionIndexFromStrings(survey, *strings):
+def getQuestionIndexFromStrings(survey, strings):
     questions = survey["LNGS"][0]["QUES"]
 
     for index, question in enumerate(questions):
         for key in strings: 
-            if key in question['Text']: 
+            if key.lower() in question['Text'].lower(): 
                 return index
     return None
 
@@ -210,7 +211,7 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
         #new user obj w/ embedded structs
         userObj = {}
         userObj['email'] = {}
-        userObj['merge_vars'] = {}
+        userObj['merge_vars'] = dex.mailchimp_merge_tags() #incl default merge tags
 
         extractedEmail = response['Responses'][emailQuestionIndex]['Res']
 
