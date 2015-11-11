@@ -19,7 +19,6 @@ Uses:
 
 
 #TODO: 
-+ Double opt-in in FALSE right now to prevent notifications to users during testing. 
 
 
 

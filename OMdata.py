@@ -126,8 +126,6 @@ def getEmailQuestionID(survey):
     questions = survey["LNGS"][0]["QUES"]
 
     for question in questions: 
-        if question['Type'] != 7: 
-            continue
         if question['IsHiddenQues'] == True: 
             continue
         if ('email' in question['Text'].lower() or 'E-MAIL' in question['Text'].lower()): 
@@ -161,9 +159,6 @@ def getQuestionIdFromStrings(survey, *strings):
     questions = survey["LNGS"][0]["QUES"]
 
     for question in questions:
-        if question['Type'] != 7:
-            continue 
-
         for key in strings:
             if key in question['Text']:
                 return question['Id']
@@ -186,6 +181,39 @@ def getQuestionIndexFromStrings(survey, strings):
             if key.lower() in question['Text'].lower(): 
                 return index
     return None
+
+'''
+    SOOOOO Opinion Meter returns some combines questions with combines answers. 
+    they are formatted as such "1^y978i23u,2^yr239i,3^u3489i=="
+    where between the (^) and the (,) is the base-64 encoded texts
+
+    arg1: pass in response
+    return: whichever it believes is the email portion (but still as a base64)
+'''
+
+def returnEmailMatrixAnswer(matrixEncode):
+    parts = matrixEncode.split(',')
+    if len(parts) < 2: 
+        return matrixEncode
+    for res in parts:
+        ans = res.split('^')
+
+        #does it have a response?
+        if len(ans) < 2: 
+            return matrixEncode
+
+        #try to grab an email
+        if len(ans[1]) > 0:
+            try: 
+                maybeEmail = base64.decodestring(ans[1])
+            except Exception, e: 
+                return matrixEncode
+        if re.match(r'[^@]+@[^@]+\.[^@]+', maybeEmail):
+            return ans[1]
+
+    return matrixEncode
+
+
 
 """
     arg 1: entire array from each location response in the OM API 
@@ -210,6 +238,7 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
     try: 
         surveyResponses = survey['SurveyResponses'] #should be an array
     except Exception: 
+        print 'noreponses'
         return capturedData
 
     for response in surveyResponses: 
@@ -225,9 +254,13 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
         extractedEmail = str (response['Responses'][emailQuestionIndex]['Res'])
 
         if ( len (extractedEmail) > 0 ): 
+            if '^' in extractedEmail: 
+                extractedEmail = returnEmailMatrixAnswer(extractedEmail)
+
             try: 
                 extractedEmail = base64.decodestring(extractedEmail)
                 userObj['email']['email'] = extractedEmail
+                print 'foundemail: ' + extractedEmail
             except Exception, e:
                 continue
 
@@ -239,17 +272,18 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
             continue
 
         #add location tag set in dex.py 
-        userObj['merge_vars'][dex.Mailchimp_Location_Tag] = locationName
+        userObj['merge_vars'][dex.GET_Mailchimp_Location_Tag()] = locationName
         userObj['email_type'] = 'html'
 
         #get merge tags
         for indexOfTag, tag in enumerate (indicesToCheck):
-            extracted = str(response['Responses'][tag]['Res'])
-            if (len (extracted) > 0 ): 
+            extracted = str( response['Responses'][tag]['Res'] )
+
+            if (len(extracted) > 0 ): 
                 try: 
                     extracted = base64.decodestring(extracted)
                     userObj['merge_vars'][mergeDict[tag]] = extracted
-                except Exception, e:
+                except Exception, e: 
                     continue
 
         #if all went well, add to the returned oject array
