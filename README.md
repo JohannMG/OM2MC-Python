@@ -19,7 +19,7 @@ Uses:
 
 
 #TODO: 
-+ Add logging to file for emails
++ Double opt-in in FALSE right now to prevent notifications to users during testing. 
 
 
 

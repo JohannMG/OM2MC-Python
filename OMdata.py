@@ -8,7 +8,7 @@ import base64
 import re
 import logging
 
-logging.basicConfig(filename='ombridge.log',level=logging.INFO)
+logging.basicConfig(filename='ombridge_write.log',level=logging.INFO)
 baseApiUrl = 'https://www.opinionmeter.com/OMDataExchangeRestAPI/api/Survey/'
 authHeader = HTTPBasicAuth(dex.omUser, dex.omPass)
 
@@ -97,14 +97,17 @@ def getSurveyAllData(startDate, endDate):
 def subcribeNewUsers(batchList):
     try: 
         mc = dex.get_mailchimp_api()
-        res = mc.lists.batch_subscribe(dex.mailchimpList, batchList, double_optin= True, update_existing=True)
+        res = mc.lists.batch_subscribe(dex.mailchimpList, batchList, double_optin= False, update_existing=True)
         logging.info ( 'Added {0} new email(s), {1} update(s) to Mailchimp. {2} Error(s)'.format(res['add_count'], res['update_count'] ,res['error_count']) ) 
 
         for item in res['adds']:
+            logging.info( 'added: {0}'.format(item['email']) )
             print 'added: {0}'.format(item['email'])
         for item in res['updates']:
+            logging.info( 'updated: {0}'.format(item['email']) )
             print 'updated: {0}'.format(item['email'])
         for item in res['errors']:
+            logging.info( '{0}: {1}, {2}'.format(item['email'],  item['code'], item['error']) )
             print '{0}: {1}, {2}'.format(item['email'],  item['code'], item['error'])
 
         return True
@@ -127,7 +130,7 @@ def getEmailQuestionID(survey):
             continue
         if question['IsHiddenQues'] == True: 
             continue
-        if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
+        if ('email' in question['Text'].lower() or 'E-MAIL' in question['Text'].lower()): 
             return question['Id']
 
     return None
@@ -141,8 +144,6 @@ def getEmailQuestionID(survey):
 def getEmailQuestionIndex(survey):
     questions = survey["LNGS"][0]["QUES"]
     for index, question in enumerate(questions):
-        if question['Type'] != 7: 
-            continue
         if question['IsHiddenQues'] == True: 
             continue
         if ('EMAIL' in question['Text'].upper() or 'E-MAIL' in question['Text'].upper()): 
@@ -223,9 +224,12 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
 
         extractedEmail = str (response['Responses'][emailQuestionIndex]['Res'])
 
-        if ( len (extractedEmail) > 0 and len(base64.decodestring(extractedEmail)) > 2 ): 
-            extractedEmail = base64.decodestring(extractedEmail)
-            userObj['email']['email'] = extractedEmail
+        if ( len (extractedEmail) > 0 ): 
+            try: 
+                extractedEmail = base64.decodestring(extractedEmail)
+                userObj['email']['email'] = extractedEmail
+            except Exception, e:
+                continue
 
         else: 
             #no email found, continue to next :(
@@ -242,8 +246,11 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
         for indexOfTag, tag in enumerate (indicesToCheck):
             extracted = str(response['Responses'][tag]['Res'])
             if (len (extracted) > 0 ): 
-                extracted = base64.decodestring(extracted)
-                userObj['merge_vars'][mergeDict[tag]] = extracted
+                try: 
+                    extracted = base64.decodestring(extracted)
+                    userObj['merge_vars'][mergeDict[tag]] = extracted
+                except Exception, e:
+                    continue
 
         #if all went well, add to the returned oject array
         capturedData.append(userObj)

@@ -1,5 +1,7 @@
 import OMdata
 import dex
+import requests
+import json
 
 
 """
@@ -147,6 +149,15 @@ def TESTextractFieldsFromResponses():
         print 'OMdata.extractFieldsFromResponses() [FAILS]'
 
 
+# def TESTgetEmailQuestionIndex(): 
+#     res = requests.get('http://www.ripleys.com/test.json')
+#     resObj = res.json()
+
+#     for sur in resObj:
+#         print sur['Name']
+#         emailIndex = OMdata.getEmailQuestionIndex(sur)
+#         print emailIndex
+
 """
     TESTS FOR dex.py
 """
@@ -170,8 +181,8 @@ if __name__ == "__main__":
     TESTgetQuestionIdFromStrings()
     TESTgetEmailQuestionIndex()
     TESTgetQuestionIndexFromStrings()
-
     TESTextractFieldsFromResponses()
+    TESTgetEmailQuestionIndex()
 
     #dex
     print 'TESTS for dex.py-------------'

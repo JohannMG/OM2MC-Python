@@ -7,12 +7,14 @@ from datetime import timedelta
 import dex
 import OMdata as ommc
 
-#called as main method below
-def runEmailLink():
-    yesterday = datetime.now()  - timedelta (days=1)
-    today = datetime.now()
+'''
+    called as main method below
+    Note: [startDate, endDate) b/c the endDate is non-inclusive
+'''
+def runEmailLink(startDate, endDate):
+    
 
-    res = ommc.getSurveyAllData(yesterday, today)
+    res = ommc.getSurveyAllData(startDate, endDate)
     resObject = res.json()
 
     mergevars = dex.getMailchimpOtherMergeVars() 
@@ -35,23 +37,31 @@ def runEmailLink():
         
         extracted = ommc.extractFieldsFromResponses(survey, emailIndex, mergedict) 
         mailchimpBatch = mailchimpBatch + extracted
-
-    print mailchimpBatch
+    ommc.subcribeNewUsers( mailchimpBatch )
 
 
 def printSurveyNameList(): 
-    yesterday = datetime.now() - timedelta (days=1)
     today = datetime.now()
 
-    res = ommc.getSurveyAllData(yesterday, today)
+    #no gap, just to get list info
+    res = ommc.getSurveyAllData(today, today)
     resObject = res.json()
 
     for survey in resObject: 
         print '{} {}'.format(survey['Name'], survey['Id'])
 
+def runForLength(daysPrevious):
+    start = datetime.now() - timedelta(days=daysPrevious)
+    end = datetime.now()
+
+    runEmailLink(start, end)
 
 
 if __name__ == "__main__":
     logging.basicConfig(filename='ombridge.log',level=logging.INFO)
-    logging.info('RUN on {0}'.format(datetime.now().strfttime('%c')))
-    runEmailLink()
+    logging.info('RUN on {0}'.format(datetime.now().strftime('%c')))
+
+    yesterday = datetime.now()  - timedelta (days=1)
+    today = datetime.now()
+
+    runEmailLink(yesterday, today)
