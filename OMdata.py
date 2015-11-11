@@ -260,7 +260,6 @@ def extractFieldsFromResponses(survey, emailQuestionIndex, mergeDict ):
             try: 
                 extractedEmail = base64.decodestring(extractedEmail)
                 userObj['email']['email'] = extractedEmail
-                print 'foundemail: ' + extractedEmail
             except Exception, e:
                 continue
 

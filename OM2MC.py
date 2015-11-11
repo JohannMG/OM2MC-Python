@@ -23,7 +23,6 @@ def runEmailLink(startDate, endDate):
     mailchimpBatch = []
 
     for survey in resObject: 
-        print survey['Name']
         emailIndex = ommc.getEmailQuestionIndex(survey)
         if emailIndex == None:
             continue; 
@@ -37,9 +36,8 @@ def runEmailLink(startDate, endDate):
         
         extracted = ommc.extractFieldsFromResponses(survey, emailIndex, mergedict) 
         mailchimpBatch = mailchimpBatch + extracted
-        print extracted
 
-    #ommc.subcribeNewUsers( mailchimpBatch )
+    ommc.subcribeNewUsers( mailchimpBatch )
 
 
 def printSurveyNameList(): 
